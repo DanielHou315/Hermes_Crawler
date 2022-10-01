@@ -1,13 +1,15 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 import random, re, os
 # import requests
 from bs4 import BeautifulSoup
 
-import time
+import time, sys
 from . import htime
+# import htime
 import requests, shutil
 
 
@@ -15,65 +17,89 @@ import requests, shutil
 Checker Functions
 '''
 
-
-
 # Get a new record
 def get_new_record():
     # Get New File Name
     file_name = "hermes_hist_" + htime.get_time_str_now() + ".html"
 
+    # try:
     # object of FirefoxOptions
-    try:
-        options = webdriver.FirefoxOptions()
-        # set options.headless to True
-        # options.headless = True
-        driver = webdriver.Firefox(options=options)
-        print("[Crawler] created driver instance")
-    except:
-        print("[Crawler] NO created driver instance")
-        return "None"
+    ff_options = webdriver.FirefoxOptions()
+    # set options.headless to True
+    # ff_options.headless = True
+    ff_options.add_argument("--width=1920")
+    ff_options.add_argument("--height=1080")
+    # ff_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36")
+    ff_profile = webdriver.FirefoxProfile()
+    ff_profile.set_preference("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36")
+    
+    ff = webdriver.Firefox(options=ff_options, firefox_profile=ff_profile)
+    ff.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    print(ff.execute_script("return navigator.userAgent;"))
+    print("[Crawler] created driver instance")
+    # except:
+    #    print("[Crawler] NO created driver instance")
+    #    return "None"
+
     try:
         # Access webpage
-        driver.implicitly_wait(0.4)
-        driver.get("https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/#|")
-        time.sleep(4)
+        ff.implicitly_wait(0.5)
+        ff.get("https://hermes.com/")
+        time.sleep(2.2)
+        buttons = ff.find_element(By.ID, "collection-button").click()
+        time.sleep(1.15)
+        ff.get("https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/bags-and-clutches/")
+        time.sleep(2.3)
+        # ff.get("https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/#|")
+        # time.sleep(1.4)
         print("[Crawler] gotten first webpage")
     except:
         pass
         print("[Crawler] NO first webpage")
-        driver.quit()
+        ff.quit()
         return "None"
+
 
     try:
         # Click load more button
-        buttons = driver.find_element(By.CLASS_NAME, "button-base").click()
-        # Scroll Down 7 times
-        for i in range(0,9):
+        bt = ff.find_elements(By.CLASS_NAME, "button-base")
+        fnd = False
+        for ele in bt:
+            if ele.text == "Load more items":
+                print("[Crawler] Found Load More Items Button")
+                fnd = True
+                ele.click()
+                time.sleep(1.55)
+
+        if fnd == False:
+            print("[Crawler] Load More Button Not Found")
+        # Scroll Down 
+        for i in range(0,6):
+            ff.execute_script("window.scrollTo(0,document.body.scrollHeight);")
             print("[Crawler] Scrolled")
-            driver.execute_script("window.scrollTo(0,document.body.scrollHeight);") 
-            time.sleep(2)
+            time.sleep(1.76)
     except:
         print("[Crawler] NO scrolled")
         pass
 
     temp_file_name = "temp_" + file_name
     with open(temp_file_name, "w") as file:
-        file.write(driver.page_source)
+        file.write(ff.page_source)
         file.close()
 
-    driver.quit()
+    ff.quit()
     os.rename(temp_file_name, file_name)
     if os.path.isfile(temp_file_name):
         os.remove(temp_file_name)
         
-    print("[Crawler] File Created")
+    print("[Crawler] File {0} Created".format(file_name))
     return file_name
 
 
 '''
 def legacy_get_new_record(self, new_file_name):
     # Get new file
-    r = requests.get("https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/#|")
+    r = requests.get("https://www.hermes.com/us/en/category/women/bags-and-small-leather-goods/")
     new_temp_file_name = "temp_" + new_file_name
 
     with open(new_temp_file_name, "w") as file:
@@ -129,16 +155,22 @@ def extract(file):
         print("[Crawler] Extraction Failed: No Such File")
         return names, links, images
 
+    lst = []
     with open(file) as fp:
         soup = BeautifulSoup(fp, "html.parser")
         # print(soup.head.title.text)
         lst = soup.find_all("div", class_="product-item")
+    print("[Crawler] {0} Items in Parsed File".format(len(lst)))
 
     for element in lst:
         # Item Name
         item_name = ""
-        try: item_name = element.a.h4.text
-        except: continue
+        try: 
+            item_name = element.a.contents[1].span.text
+            print("[Crawler] Fetched item {0}".format(item_name))
+        except: 
+            print("[Crawler] Failed to fetch item name")
+            continue
         # Item URL
         item_url = "None"
         try: item_url = "https://hermes.com" + element.a['href']
@@ -187,7 +219,7 @@ def compare(old_record, old_link, old_image, new_record, new_link, new_image):
 
 
 if __name__ == "__main__":
-    # extract("TestPage2.html")
+    extract(sys.argv[1])
     # Get New Record
     # new_file = get_new_record()
 
@@ -197,4 +229,4 @@ if __name__ == "__main__":
     if len(new_images):
         print(new_images[0])
     '''
-    print(is_blocked("hermes_hist_2022_8_18_22_13_30.html"))
+    # print(is_blocked("hermes_hist_2022_8_18_22_13_30.html"))
