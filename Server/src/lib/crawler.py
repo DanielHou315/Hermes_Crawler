@@ -167,7 +167,8 @@ def compare(logger, tracking_list, old_record, old_link, old_image, new_record, 
             if re.findall(pattern, new_record[i]):
                 rtn_record.append(new_record[i]); rtn_links.append(new_link[i]); rtn_images.append(new_image[i])
                 logger.log("Crawler", "Found New Item")
-            logger.log("Crawler", "Skipped Item")
+            else:
+                logger.log("Crawler", "Skipped Item")
         i+=1
     logger.log("Crawler", "Found {0} different Items".format(len(rtn_record)))
     return rtn_record, rtn_links, rtn_images

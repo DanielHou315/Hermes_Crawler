@@ -55,20 +55,20 @@ def find_last_record(root):
     return last_record
 
 def clear_cache(root):
-    # try:
-    last_record = find_last_record(root)
-    # Clear extraneous records
-    dirs = os.listdir(root + "record_cache/")
-    for file in dirs:
-        if file != last_record:
-            os.remove(root + "record_cache/" + file)
-    # Clear Image Cache
-    dirs = os.listdir(root + "image_cache/")
-    for file in dirs:
-        os.remove(root + "record_cache/" + file) 
-    return True
-    # except:
-    #     return False
+    try:
+        last_record = find_last_record(root)
+        # Clear extraneous records
+        dirs = os.listdir(root + "record_cache/")
+        for file in dirs:
+            if file != last_record:
+                os.remove(root + "record_cache/" + file)
+        # Clear Image Cache
+        dirs = os.listdir(root + "image_cache/")
+        for file in dirs:
+            os.remove(root + "image_cache/" + file) 
+        return True
+    except:
+        return False
 
 
 ''' Email Validator '''

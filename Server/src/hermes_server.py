@@ -15,6 +15,7 @@ class HC():
         self.logger = self.configure_logger(self.root)
 
         ''' Load Settings '''
+        self.user_name = "dear customer"
         self.user_email = ""
         self.tracking_list = []
         self.load_config(logger=self.logger, config_file=self.root+"configuration.json")
@@ -43,12 +44,17 @@ class HC():
                 if not utils.is_valid_email(self.user_email):
                     raise Exception("Email format not valid!")
                 self.logger.log("Config Loader", "User Email {0} Noted".format(self.user_email))
-
+            except:
+                raise Exception("Failed to get user email from JSON")
+            try:
                 self.tracking_list = content["tracked_bag_names"]
                 for item in self.tracking_list:
                     if item == "": self.tracking_list.remove(item)
             except:
-                raise Exception("Failed to open JSON configuration file")
+                raise Exception("Failed to get tracking list from JSON")
+
+            try: self.user_name = content["user_name"]
+            except: pass
         return
 
 
@@ -82,7 +88,7 @@ class HC():
         # now = datetime.now()
 
         # Get New Record
-        new_file = crawler.get_new_record(self.root, self.logger)
+        new_file = crawler.get_new_record(logger=self.logger, root=self.root)
         self.logger.log("Main", "Gotten New Record: " + new_file)
 
 
@@ -106,12 +112,14 @@ class HC():
 
         # Send Email
         if len(diff_list) > 0:
-            msg.send_email(self.user_email, self.root, diff_list, diff_links, diff_images)
+            msg.send_email(self.logger, self.root, self.user_email, diff_list, diff_links, diff_images)
             self.logger.log("Main", "Sent Email")
             del diff_list, diff_links, diff_images
         else:
             self.logger.log("Main", "No Different Items, so no email sent")
-        # Update Settings
+        # Clear Cache
+        utils.clear_cache(root=self.root)
+        # Finish
         self.logger.log("Main", "Finished Checking")
         return
 

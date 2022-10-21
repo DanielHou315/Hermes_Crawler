@@ -70,7 +70,7 @@ def send_email(logger, root, client_email, name_list, link_list, image_list):
         if image_list[i] != "None":
             logger.log("Msg", "Attaching Image {0}".format(image_list[i]))
             full_img_name = crawler.get_image(logger, root, link=image_list[i], name=str(i))
-            attach_img(msg, full_img_name)
+            attach_img(logger, msg, full_img_name)
             logger.log("Msg", "Attached Image {0}".format(full_img_name))
             del full_img_name
         i += 1
