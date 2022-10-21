@@ -31,27 +31,24 @@ end_html = \
 
 
 # Generate Email
-def send_email(client_email, name_list, link_list, image_list):
-    print("[Msg] Sending Email")
+def send_email(logger, root, client_email, name_list, link_list, image_list):
+    logger.log("Msg", "Sending Email")
     receiver = client_email
     try:
         s = smtplib.SMTP('smtp.gmail.com', 587)                             # creates SMTP session 
         s.starttls()                                                        # start TLS for security 
         s.login("hermescrawlerapp@gmail.com", "kgqnrsunopoyccpw")   # Authentication 
     except:
-        return
+        raise Exception("Email Service Start Failed")
 
     msg = MIMEMultipart()
     msg['Subject'] = "Hermes Updater Message"
     msg['From'] = sender
     msg['To'] = receiver
-    print("[Msg] Created Email Object")
+    logger.log("Msg", "Created Email Object")
 
     # Process Bag List
     msg.attach(MIMEText(begin_html, 'html'))
-    if not os.path.isdir("img_cache"):
-        os.mkdir("img_cache")
-    print("[Msg] Created Image Cached Directory")
 
     i = 0
     while i < len(name_list):
@@ -59,51 +56,36 @@ def send_email(client_email, name_list, link_list, image_list):
         entry = "<b><p> - "
         # Add bag webstore link if applicable
         if link_list[i] != "None":
-            print("[Msg] Attaching Link {0}".format(link_list[i]))
+            logger.log("Msg", "Attaching Link {0}".format(link_list[i]))
             entry += '<a href="{0}">'.format(link_list[i])
             entry = entry + name_list[i] + "</a>"
-            print("[Msg] Attached Link")
+            logger.log("Msg", "Attached Link")
         else:
             entry += name_list[i]
         entry += "</p></b>"
         msg.attach(MIMEText(entry, 'html'))
-        print("[Msg] Added object text")
+        logger.log("Msg", "Added object text")
 
         # Add bag image if applicable
         if image_list[i] != "None":
-            print("[Msg] Attaching Image {0}".format(image_list[i]))
-            img_name = crawler.get_image(image_list[i], i)
-            attach_img(msg, img_name)
-            print("[Msg] Attached Image {0}".format(img_name))
-            del img_name
+            logger.log("Msg", "Attaching Image {0}".format(image_list[i]))
+            full_img_name = crawler.get_image(logger, root, link=image_list[i], name=str(i))
+            attach_img(msg, full_img_name)
+            logger.log("Msg", "Attached Image {0}".format(full_img_name))
+            del full_img_name
         i += 1
         
     msg.attach(MIMEText(end_html, 'html'))
-    
-    # Clean up img_cache directory
-    for root, dirs, files in os.walk("img_cache"):
-        for file in files:
-            os.remove("img_cache/" + file)
-    os.rmdir("img_cache")
-    print("[Msg] Cleared Image Cache")
-
-    '''
-    with open("testout.html", "w") as f:
-        f.write(msg.as_string())
-        f.close()
-    print("[Msg] Written Test Email HTML")
-    '''
 
     # Send email and exit
     s.sendmail(sender, receiver, msg.as_string())
     s.quit()
-
-    print("[Msg] Sent Email")
+    logger.log("Msg", "Sent Email")
     return
 
 
 
-def attach_img(msg, filename):
+def attach_img(logger, msg, filename):
     # Open the attachment file for reading in binary mode, and make it a MIMEImage class
     with open(filename, "rb") as f:
         file_attachment = MIMEImage(f.read())
