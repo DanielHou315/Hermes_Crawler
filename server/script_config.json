@@ -1,0 +1,8 @@
+{
+  "name":"hermes_crawler",
+  "dependencies":[
+    "undetected_chromedriver",
+    "selenium",
+    "bs4",
+  ]
+}

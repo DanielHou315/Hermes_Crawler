@@ -1,8 +1,8 @@
-# #!/opt/homebrew/Cellar/python@3.10/3.10.6_2/Frameworks/Python.framework/Versions/3.10/lib/python3.10
 
 import os, sys, json
 from datetime import datetime
 from lib import utils, msg, crawler
+
 
 ROOT_PATH = "/Users/danielhou/"
 
