@@ -1,3 +1,0 @@
-([('hermes_crawler',
-   '/Users/danielhou/Documents/code/Hermes_Crawler/dist/hermes_crawler',
-   'EXECUTABLE')],)
